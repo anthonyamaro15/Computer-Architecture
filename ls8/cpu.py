@@ -17,26 +17,31 @@ class CPU:
 
         address = 0
 
-        # For now, we've just hardcoded a program:
+        if len(sys.argv) != 2:
+            print('usage: comp.py + filename')
+            sys.exit(1)
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
+        try:
+            with open(sys.argv[1]) as f:
+                for line in f:
+                    try:
+                        # print('her ', line)
+                        line = line.split('#', 1)[0]
+                        # print('her ', line)
+                        line = int(line, 2)
+                        self.ram[address] = line
+                        address += 1
+                    except ValueError:
+                        pass
+        except FileNotFoundError:
+            print(f'Couldnt find file {sys.argv[1]}')
+            sys.exit(1)
 
-        for instruction in program:
+        for instruction in self.reg:
             self.ram[address] = instruction
             address += 1
 
     def ram_read(self, address):
-        operand_a = self.ram[self.pc + 1]
-        operand_b = self.ram[self.pc + 2]
-
         return self.ram[address]
 
     def ram_write(self, value, address):
@@ -79,14 +84,21 @@ class CPU:
         ops = {
             0b10000010: 'LDI',
             0b01000111: 'PRN',
-            0b00000001: 'HLT'
-
+            0b00000001: 'HLT',
+            0b10100010:  "MUL"
         }
 
         while running:
-            inst = self.ram_read(self.pc)
 
-            if ops[inst] == 'LDI':
+            inst = self.ram_read(self.pc)
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
+            if inst not in ops:
+                print(f'Unknown instruction {bin(inst)}')
+                break
+
+            elif ops[inst] == 'LDI':
                 reg_num = self.ram[self.pc + 1]
                 value = self.ram[self.pc + 2]
 
@@ -100,8 +112,11 @@ class CPU:
 
                 self.pc += 2
 
+            elif ops[inst] == 'MUL':
+                self.reg[operand_a] *= self.reg[operand_b]
+
+                self.pc += 3
+
             elif ops[inst] == 'HLT':
                 running = False
-
-            else:
-                print(f'Unknown instruction {inst}')
+      #   self.alu(ops, reg_a, reg_b)
