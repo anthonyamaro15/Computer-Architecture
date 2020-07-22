@@ -80,12 +80,15 @@ class CPU:
         """Run the CPU."""
 
         running = True
+        SP = 7
 
         ops = {
             0b10000010: 'LDI',
             0b01000111: 'PRN',
             0b00000001: 'HLT',
-            0b10100010:  "MUL"
+            0b10100010:  "MUL",
+            0b01000101: "PUSH",
+            0b01000110: 'POP'
         }
 
         while running:
@@ -116,6 +119,28 @@ class CPU:
                 self.reg[operand_a] *= self.reg[operand_b]
 
                 self.pc += 3
+
+            elif ops[inst] == 'PUSH':
+                self.reg[SP] -= 1
+
+                reg_num = self.ram[self.pc + 1]
+                value = self.reg[reg_num]
+
+                address_to_push = self.reg[SP]
+                self.ram[address_to_push] = value
+
+                self.pc += 2
+
+            elif ops[inst] == 'POP':
+                address_to_pop = self.reg[SP]
+                value = self.ram[address_to_pop]
+
+                reg_num = self.ram[self.pc + 1]
+                self.reg[reg_num] = value
+
+                self.reg[SP] += 1
+
+                self.pc += 2
 
             elif ops[inst] == 'HLT':
                 running = False
