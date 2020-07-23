@@ -79,7 +79,7 @@ class CPU:
     def run(self):
         """Run the CPU."""
 
-        self.load()
+      #   self.load()
         running = True
         SP = 7
       #   CALL = 7
