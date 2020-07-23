@@ -79,8 +79,11 @@ class CPU:
     def run(self):
         """Run the CPU."""
 
+        self.load()
         running = True
         SP = 7
+      #   CALL = 7
+      #   RET = 8
 
         ops = {
             0b10000010: 'LDI',
@@ -88,7 +91,10 @@ class CPU:
             0b00000001: 'HLT',
             0b10100010:  "MUL",
             0b01000101: "PUSH",
-            0b01000110: 'POP'
+            0b01000110: 'POP',
+            0b01010000: 'CALL',
+            0b00010001: 'RET',
+            0b10100000: 'ADD'
         }
 
         while running:
@@ -141,6 +147,29 @@ class CPU:
                 self.reg[SP] += 1
 
                 self.pc += 2
+
+            elif ops[inst] == 'CALL':
+                return_addr = self.pc + 2
+
+                self.reg[SP] -= 1
+                address_to_push = self.reg[SP]
+                self.ram[address_to_push] = return_addr
+
+                reg_num = self.ram[self.pc + 1]
+                subroutine_addr = self.reg[reg_num]
+
+                self.pc = subroutine_addr
+
+            elif ops[inst] == 'RET':
+                address_to_pop = self.reg[SP]
+                return_addr = self.ram[address_to_pop]
+                self.reg[SP] += 1
+
+                self.pc = return_addr
+
+            elif ops[inst] == 'ADD':
+                self.reg[operand_a] += self.reg[operand_b]
+                self.pc += 3
 
             elif ops[inst] == 'HLT':
                 running = False
