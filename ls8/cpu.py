@@ -11,6 +11,7 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
+        self.FL = [0, 0, 0, 0, 0, 0, 0, 0]
 
     def load(self):
         """Load a program into memory."""
@@ -85,6 +86,18 @@ class CPU:
       #   CALL = 7
       #   RET = 8
 
+      # CMP
+      # JMP
+      # JEQ
+      # JNE
+
+      # AND
+      # OR
+      # XOR
+      # NOT
+      # SHL
+      # MOD
+
         ops = {
             0b10000010: 'LDI',
             0b01000111: 'PRN',
@@ -94,7 +107,12 @@ class CPU:
             0b01000110: 'POP',
             0b01010000: 'CALL',
             0b00010001: 'RET',
-            0b10100000: 'ADD'
+            0b10100000: 'ADD',
+            #
+            0b10100111: 'CMP',
+            0b01010100: 'JMP',
+            0b01010101: 'JEQ',
+            0b01010110: 'JNE'
         }
 
         while running:
@@ -170,6 +188,62 @@ class CPU:
             elif ops[inst] == 'ADD':
                 self.reg[operand_a] += self.reg[operand_b]
                 self.pc += 3
+
+            #  --------------- CMP HERE ----------------
+            elif ops[inst] == 'CMP':
+                # self.FL = [0,0,0,0,0, 'L','G','E']
+                # if they are equal set flag to 1
+                if self.reg[operand_a] == self.reg[operand_b]:
+                    self.FL[-1] = 1
+                  #   print('FLAG', self.FL)
+
+                # if reg_a < reg_b set L flag to 1
+                elif self.reg[operand_a] < self.reg[operand_b]:
+                    self.FL[-3] = 1
+                  #   print('FLAG REG ', self.FL)
+
+                # if reg_a > reg_b set G flag to 1
+                elif self.reg[operand_a] > self.reg[operand_b]:
+                    self.FL[-2] = 1
+                  #   print('FLAG REG ', self.FL)
+                self.pc += 3
+
+            # ------------------- JMP ----------------------------
+            elif ops[inst] == 'JMP':
+                #  get reg value
+                reg_num = self.ram[self.pc + 1]
+
+                address = self.reg[reg_num]
+                print('address in', reg_num, 'is -- ', address)
+                # set pc to address stored in the reg
+                self.pc = address
+
+            # ------------------- JEQ ----------------------------
+            elif ops[inst] == 'JEQ':
+                # if the equal flag is set to TRUE(1), jump to the address stored in the given register
+                if self.FL[-1] == 1:
+                   # get register value
+                    reg_num = self.ram[self.pc + 1]
+
+                    address = self.reg[reg_num]
+                   # set pc to address stored in the reg
+                    self.pc = address
+                else:
+                    self.pc += 2
+
+            # ------------------- JNE ----------------------------
+            elif ops[inst] == 'JNE':
+                # if the equal flag is set to FALSE (0), jump to ahe address stored in the given register
+                # self.FL = [0,0,0,0,0, 'L','G','E']
+                if self.FL[-1] == 0:
+                    # get reg value
+                    reg_num = self.ram[self.pc + 1]
+
+                    address = self.reg[reg_num]
+                    # set pc to address stored in the reg
+                    self.pc = address
+                else:
+                    self.pc += 2
 
             elif ops[inst] == 'HLT':
                 running = False
